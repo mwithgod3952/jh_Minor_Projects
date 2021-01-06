@@ -1,7 +1,6 @@
 library(reshape2)
 library(dplyr)
 library("zoo")
-rm(list = ls())
 
 df1 <-read.csv("card.csv", stringsAsFactors=FALSE)
 df1.long_f = melt(data = df1,
