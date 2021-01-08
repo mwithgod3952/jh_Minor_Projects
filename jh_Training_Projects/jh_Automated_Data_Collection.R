@@ -47,7 +47,7 @@ mouse.click("left")
 mouse.move(568,906, duration = 3) #Duration 고려 : 10개 그룹 단위로 새로고침 필요
 mouse.click("left")
 
-mouse.move(962,1029, duration = 3) #선택범위 이동 : 스코롤다운
+mouse.move(962,1029, duration = 3) #선택범위 이동 : 스크롤다운
 mouse.click("left")
 mouse.move(962,1029) 
 mouse.click("left")
