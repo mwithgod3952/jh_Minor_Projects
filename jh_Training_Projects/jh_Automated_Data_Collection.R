@@ -13,6 +13,25 @@ install.packages("taskscheduleR")
 library(KeyboardSimulator)
 library(taskscheduleR)
 
+#검색어입력 / 
+mouse.move(317,185)
+mouse.click("left")
+keybd.press("A+S+S+O+S")
+Sys.sleep(1)
+keybd.press("enter")
+Sys.sleep(1)
+
+mouse.move(962,1029) #스크롤다운
+mouse.click("left")
+mouse.move(962,1029) 
+mouse.click("left")
+mouse.move(962,1029) 
+mouse.click("left")
+mouse.move(962,1029) 
+mouse.click("left")
+mouse.move(962,1029) 
+mouse.click("left")
+
 # 첫페이지 접근
 mouse.move(649,315) #카테고리 내 모두 선택
 mouse.click("left")
@@ -65,3 +84,4 @@ mouse.click("left")
 
 # 이하 같은작업 반복
 # .
+
