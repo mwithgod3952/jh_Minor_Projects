@@ -58,4 +58,9 @@ table(df.testset$Class, df.forest.pred,
 mean(df.testset$Class == df.forest.pred, na.rm = TRUE)
 #' @[1]_0.9661836, 예측정확도 96%
 
+library(cluster)
+windows()
+clusplot(x=na.omit(df.testset[,-10]), clus=na.omit(df.forest.pred),
+                   color=TRUE, shade=TRUE, labels=4, lines=0,
+                   main="Classification from Breast Cancer Dataset")
 
