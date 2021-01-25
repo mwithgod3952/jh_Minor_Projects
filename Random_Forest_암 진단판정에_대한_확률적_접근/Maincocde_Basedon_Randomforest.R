@@ -3,6 +3,8 @@ library(dplyr)
 library(randomForest)
 library(cluster)
 library(cluster)
+library(broom)
+library(cvms)
 
 "Random_Forest_암 진단판정에_대한_확률적_접근"
 
@@ -48,12 +50,20 @@ df.forest.pred <- predict(df.forest, newdata = df.testset, type = "prob")
 df.forest.pred <- predict(df.forest, newdata = df.testset, type = "response")
 
 #' @ST5_예측정확도 확인 
-table(df.testset$Class, df.forest.pred,
-      dnn = c("Actual", "Predicted"))
-
+# table(df.testset$Class, df.forest.pred, dnn = c("Actual", "Predicted"))
 # Actual      benign  malignant
 # benign        142          6
 # malignant       1         58
+
+d_binomial <- tibble("target" = df.testset$Class,
+                     "prediction" =  df.forest.pred)
+
+eval <- evaluate(d_binomial,
+                 target_col = "target",
+                 prediction_cols = "prediction",
+                 type = "binomial")
+conf_mat <- eval$`Confusion Matrix`[[1]]
+plot_confusion_matrix(conf_mat)
 
 mean(df.testset$Class == df.forest.pred, na.rm = TRUE)
 #' @[1]_0.9661836, 예측정확도 96%
@@ -63,4 +73,3 @@ windows()
 clusplot(x=na.omit(df.testset[,-10]), clus=na.omit(df.forest.pred),
                    color=TRUE, shade=TRUE, labels=4, lines=0,
                    main="Classification from Breast Cancer Dataset")
-
