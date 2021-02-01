@@ -1,1 +1,1 @@
-# jh_Training_Projects
+# jh_Minor_Projects
