@@ -1,0 +1,146 @@
+# Create_indicator1 -- MFI
+def money_flow_index(nth, period=14):
+    mdf = Creating_technical_indicator[nth]
+    typical_price = (mdf['close'] + mdf['high'] + mdf['low']) / 3
+    money_flow = typical_price * mdf['volume']
+    
+    positive_flw = []
+    negative_flw = []
+    
+    for i in range(1, len(typical_price)):
+        if typical_price[i] > typical_price[i-1]:
+            positive_flw.append(money_flow[i-1])
+            negative_flw.append(0)
+        elif typical_price[i] < typical_price[i-1]:
+            negative_flw.append(money_flow[i-1])
+            positive_flw.append(0)
+        else:
+            negative_flw.append(0)
+            positive_flw.append(0)
+
+    positive_mflw = []
+    negative_mflw = []
+            
+    for i in range(period-1, len(positive_flw)):
+        positive_mflw.append( sum(positive_flw[i+1-period:i+1]) )
+    for i in range(period-1, len(negative_flw)):
+        negative_mflw.append( sum(negative_flw[i+1-period:i+1]) )     
+
+    mfi = 100 * (np.array(positive_mflw) / (np.array(positive_mflw) + np.array(negative_mflw)))
+    Creating_technical_indicator[nth]['mfi'] = np.nan
+    Creating_technical_indicator[nth][14:]['mfi'] = mfi.tolist() 
+    Creating_technical_indicator[nth]['mfi'].fillna(0, inplace = True)
+    
+for i in range(10):
+    money_flow_index(i, 14)
+
+   
+# OBV, OBV_EMA    
+def on_balance_volume(nth, span=20):
+    odf = Creating_technical_indicator[nth]
+    OBV = []
+    OBV.append(0)
+
+    for i in range(1, len(odf.close)):
+        if odf.close[i] > odf.close[i-1]:
+            OBV.append(OBV[-1] + odf.volume[i])
+        elif odf.close[i] < odf.close[i-1]:
+            OBV.append(OBV[-1] - odf.volume[i])
+        else:
+            OBV.append(OBV[-1])
+            
+    Creating_technical_indicator[nth]['obv'] = OBV
+    Creating_technical_indicator[nth]['obv_ema'] = odf['obv'].ewm(span=span).mean()
+
+for i in range(10):
+    on_balance_volume(i, span=20)
+
+
+# PVI(Positive Volume Index, Positive Volume Index_ema)    
+def positive_volume_index(nth, periods=255):
+    pdf = Creating_technical_indicator[nth].reset_index().copy()
+    pdf['pvi'] = 0
+    pvi = []
+
+    for idx, row in pdf.iterrows():
+        if idx > 0:
+            prev_pvi = pdf['pvi'][idx]
+            prev_close = pdf['close'][idx]
+            if row['volume'] > pdf['volume'][idx-1]:
+                pvi.append(prev_pvi + (row['close'] - prev_close / prev_close * prev_pvi))
+            else:
+                pvi.append(prev_pvi)
+        else:
+            pvi.append(1000)
+            
+    Creating_technical_indicator[nth]['pvi'] = pvi
+    Creating_technical_indicator[nth]['pvi_ema'] = Creating_technical_indicator[nth]['pvi'].ewm(ignore_na=False, min_periods=0, com=periods, adjust=True).mean()
+
+# one-year cycle    
+for i in range(10):
+    positive_volume_index(i, periods=225)
+
+
+# VWAP
+def volume_weighted_average_price(nth):
+    vdf = Creating_technical_indicator[nth].copy()
+    vdf['vwap'] = np.cumsum(vdf['volume'] * (vdf['high'] + vdf['low']) / 2) / np.cumsum(vdf['volume'])
+    vdf = vdf.fillna(0)
+    
+    Creating_technical_indicator[nth]['vwap'] = vdf['vwap'].tolist()
+    Creating_technical_indicator[i]['vwap'][-1]
+    
+for i in range(10):
+    volume_weighted_average_price(i)
+
+
+# CCI(commodity_channel_index)
+def commodity_channel_index(nth, n=20, weight=0.015):    
+    ccdf = Creating_technical_indicator[0].copy()
+    # n = 20 
+    # weight = 0.015
+    avg_price = (ccdf['high'] + ccdf['low'] + ccdf['close']) / 3
+    cci = pd.Series((avg_price - avg_price.rolling(window=n, center=False).mean()) / (weight * avg_price.rolling(window=n, center=False).std()))
+    
+    Creating_technical_indicator[nth]['cci'] = cci.fillna(0)
+
+for i in range(10):
+    commodity_channel_index(i, 20, 0.015)    
+ 
+
+# ATR , NATR
+def average_true_range(nth, window=14):
+    cdf = Creating_technical_indicator[nth].copy()
+    cdf['HL'] = cdf['high'] - cdf['low']
+    cdf['abs_HC'] = abs(cdf['high'] - cdf['close'].shift(1))
+    cdf['abs_LC'] = abs(cdf['low'] - cdf['close'].shift(1))
+    cdf['TR'] = cdf[['HL','abs_HC','abs_LC']].max(axis=1)
+    cdf['ATR'] = cdf['TR'].rolling(window=14).mean()
+    cdf['NATR'] = (cdf['ATR'] / cdf['close']) *100
+    cdf = cdf.fillna(0)
+    
+    Creating_technical_indicator[nth]['atr'] = cdf['ATR'].tolist()
+    Creating_technical_indicator[nth]['natr'] = cdf['NATR'].tolist()
+    
+for i in range(10):
+    average_true_range(i, 14)
+
+ 
+# ADX(Average Directional Movement Index)
+# DM: Directional Movement
+# DI: Directional Indicator
+def average_directional_movement_index(nth, period = 14):
+    axdf = Creating_technical_indicator[nth].copy()
+    axdf['uptrend'] = axdf['high'] - axdf['high'].shift(1)
+    axdf['downtrend'] = axdf['low'].shift(1) - axdf['low']
+    axdf['blanked'] = 0
+    axdf['DM_up'] = np.where((axdf['uptrend'] > axdf['downtrend']) & (axdf['uptrend'] > axdf['blanked']), axdf['uptrend'], 0)
+    axdf['DM_down'] = np.where((axdf['uptrend'] < axdf['downtrend']) & (axdf['downtrend'] > axdf['blanked']), axdf['downtrend'], 0)
+    axdf['DI_up'] = 100 * (axdf['DM_up'] / axdf['atr']).ewm(span=period,min_periods=0,adjust=True,ignore_na=False).mean()
+    axdf['DI_down'] = 100 * (axdf['DM_down'] / axdf['atr']).ewm(span=period,min_periods=0,adjust=True,ignore_na=False).mean()
+    axdf['adx'] = 100 * (abs((axdf['DI_up'] - axdf['DI_down'])/(axdf['DI_up'] + axdf['DI_down']))).ewm(span=period,min_periods=0,adjust=True,ignore_na=False).mean()
+   
+    Creating_technical_indicator[nth]['adx'] = axdf['adx'].fillna(0)
+    
+for i in range(10):
+    average_directional_movement_index(i, 14)
