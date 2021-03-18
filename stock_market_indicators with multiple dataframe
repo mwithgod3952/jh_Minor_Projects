@@ -1,3 +1,8 @@
+# Copy the dateframe list
+Creating_technical_indicator = []
+for i in range(10):
+     Creating_technical_indicator.append(Sk_by_comp_n[i].sort_values(by='date', ascending=True).copy())
+     
 # Create_indicator1 -- MFI
 def money_flow_index(nth, period=14):
     mdf = Creating_technical_indicator[nth]
